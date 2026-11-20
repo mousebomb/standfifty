@@ -52,9 +52,28 @@ jobs:
           rm cert.p12
           security find-identity -v -p codesigning
 
-      # 注意：不跑 notarytool store-credentials——无头 runner 上它会崩（Trace/BPT trap: 5）
+      # 凭据存进临时钥匙串（不用默认钥匙串——无头 runner 上那样会让 notarytool 崩溃），
+      # 这样密码不进命令行参数，只以钥匙串条目的形式存在于一次性的 runner 上
+      - name: 配置公证凭据
+        id: notary
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if xcrun notarytool store-credentials ci \
+               --keychain "$HOME/Library/Keychains/build.keychain-db" \
+               --apple-id "$APPLE_ID" \
+               --team-id "$APPLE_TEAM_ID" \
+               --password "$APPLE_APP_PASSWORD"; then
+            echo "profile=ci" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::store-credentials 失败，退回凭据直传"
+          fi
+
       - name: 构建 / 签名 / 公证 / 打包
         env:
+          NOTARY_PROFILE: ${{ steps.notary.outputs.profile }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -66,6 +85,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
+          # 重跑同一个版本时不要因为 Release 已存在而失败
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION 已存在，跳过创建"
+            exit 0
+          fi
           gh release create "v$VERSION" \
             "dist/StandFifty-$VERSION.dmg" \
             "dist/StandFifty-$VERSION.dmg.sha256" \
