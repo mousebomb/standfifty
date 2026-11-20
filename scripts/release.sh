@@ -8,7 +8,8 @@
 #
 # 相关环境变量：
 #   SIGN_IDENTITY   签名身份，默认自动找 "Developer ID Application"
-#   NOTARY_PROFILE  notarytool 的 keychain profile 名（xcrun notarytool store-credentials 建的）
+#   NOTARY_PROFILE  notarytool 的 keychain profile 名（本地用 xcrun notarytool store-credentials 建的）
+#                   CI 里没有可写的钥匙串会话，改传 APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID
 #   BUILD_NUMBER    CFBundleVersion，默认用 git 提交数
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -120,12 +121,22 @@ fi
 
 # ---------- 6. 公证 + 装订 ----------
 if [ "$MODE" = "developer-id" ] && [ "$SKIP_NOTARIZE" -eq 0 ]; then
-    if [ -z "${NOTARY_PROFILE:-}" ]; then
-        echo "缺少 NOTARY_PROFILE，跳过公证。"
-        echo "先执行：xcrun notarytool store-credentials <profile名> --apple-id ... --team-id ... --password ..."
+    if [ -n "${NOTARY_PROFILE:-}" ]; then
+        NOTARY_ARGS=(--keychain-profile "$NOTARY_PROFILE")
+    elif [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_APP_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
+        # CI 路径：不碰钥匙串，直接传凭据
+        NOTARY_ARGS=(--apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD")
+    else
+        NOTARY_ARGS=()
+    fi
+
+    if [ ${#NOTARY_ARGS[@]} -eq 0 ]; then
+        echo "没有公证凭据，跳过公证。"
+        echo "本地：xcrun notarytool store-credentials <profile> --apple-id ... --team-id ... --password ..."
+        echo "CI  ：设 APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID 三个环境变量"
     else
         echo "==> 提交公证（可能要等 1~3 分钟）"
-        xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
+        xcrun notarytool submit "$DMG_PATH" "${NOTARY_ARGS[@]}" --wait
 
         echo "==> 装订票据"
         xcrun stapler staple "$DMG_PATH"

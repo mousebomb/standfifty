@@ -52,21 +52,12 @@ jobs:
           rm cert.p12
           security find-identity -v -p codesigning
 
-      # 用 Apple ID + App 专用密码，和本地 notarytool store-credentials 是同一套凭据
-      - name: 配置公证凭据
+      # 注意：不跑 notarytool store-credentials——无头 runner 上它会崩（Trace/BPT trap: 5）
+      - name: 构建 / 签名 / 公证 / 打包
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          xcrun notarytool store-credentials ci \
-            --apple-id "$APPLE_ID" \
-            --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_PASSWORD"
-
-      - name: 构建 / 签名 / 公证 / 打包
-        env:
-          NOTARY_PROFILE: ci
           BUILD_NUMBER: ${{ github.run_number }}
         run: ./scripts/release.sh "${{ steps.ver.outputs.version }}"
 
