@@ -87,6 +87,20 @@ swift test                                                   # 22 个用例
 
 ## 图标
 
-- 原始素材：`docs/ref/matting_00179_.png`（透明底），`docs/ref/qwen_aio_00069_.png` 是不透明版本，不能用——`.icns` 需要 alpha，否则蓝色圆盘后面会露白方块。
-- 生成：`swift scripts/make-icon.swift docs/ref/matting_00179_.png build/AppIcon.iconset && iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns`
-- 脚本会自动找出实心图案的包围盒，按 macOS 规范把图案缩到画布 80%（824/1024），再输出 10 个尺寸。
+当前图标由 Gemini 生成（2048²，白底 JPEG，无 alpha），需要先抠再排版：
+
+```bash
+# 1. 抠白底 + 按 macOS 规范把圆盘缩到画布 80%（824/1024）
+swift scripts/matte-icon.swift docs/ref/gemini-stand-2048.jpg build/AppIcon-master.png
+# 2. 出 10 个尺寸
+swift scripts/make-icon.swift build/AppIcon-master.png build/AppIcon.iconset
+# 3. 打包
+iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
+```
+
+两个坑：
+
+- 白底图必须先抠，`.icns` 需要 alpha，否则蓝圆盘后面会露白方块。
+- 抠完还要把 alpha=0 区域的白色 RGB 清零（`matte-icon.swift` 最后一步重合成到预乘透明画布），否则某些绘制路径会把透明区渲染成白块。
+
+历史素材留在 `docs/ref/`：`matting_00179_.png`（旧的上箭头版）、`qwen_aio_00069_.png`（不透明版，不可用）、`icon-concepts-2026-11-20.png`（四版草图对比）。
