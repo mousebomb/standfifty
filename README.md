@@ -60,7 +60,9 @@ open /Applications/StandFifty.app
 | `MACOS_CERT_P12` | Developer ID 证书 + 私钥导出的 .p12，base64 编码 |
 | `MACOS_CERT_PASSWORD` | p12 的导出密码 |
 | `KEYCHAIN_PASSWORD` | CI 临时钥匙串密码，随便生成 |
-| `ASC_KEY_ID` / `ASC_ISSUER_ID` / `ASC_PRIVATE_KEY` | App Store Connect API Key |
+| `APPLE_ID` | Apple ID 邮箱 |
+| `APPLE_APP_PASSWORD` | App 专用密码（appleid.apple.com 生成） |
+| `APPLE_TEAM_ID` | 团队 ID，本机是 `X75L7EAC2X` |
 
 ## 设置项
 

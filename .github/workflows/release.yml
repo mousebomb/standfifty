@@ -52,18 +52,17 @@ jobs:
           rm cert.p12
           security find-identity -v -p codesigning
 
-      - name: 配置公证凭据（App Store Connect API Key）
+      # 用 Apple ID + App 专用密码，和本地 notarytool store-credentials 是同一套凭据
+      - name: 配置公证凭据
         env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          echo "$ASC_PRIVATE_KEY" > AuthKey.p8
           xcrun notarytool store-credentials ci \
-            --key AuthKey.p8 \
-            --key-id "$ASC_KEY_ID" \
-            --issuer "$ASC_ISSUER_ID"
-          rm AuthKey.p8
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD"
 
       - name: 构建 / 签名 / 公证 / 打包
         env:

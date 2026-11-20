@@ -112,6 +112,12 @@ rm -f "$DMG_PATH"
 hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG_PATH"
 hdiutil verify "$DMG_PATH" >/dev/null
 
+# DMG 本身也签一下：Gatekeeper 可以直接校验整份镜像，离线也能验
+if [ "$MODE" = "developer-id" ]; then
+    codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG_PATH"
+    codesign --verify --verbose=1 "$DMG_PATH"
+fi
+
 # ---------- 6. 公证 + 装订 ----------
 if [ "$MODE" = "developer-id" ] && [ "$SKIP_NOTARIZE" -eq 0 ]; then
     if [ -z "${NOTARY_PROFILE:-}" ]; then
