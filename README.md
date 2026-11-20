@@ -1,5 +1,7 @@
 # StandFifty
 
+[![CI](https://github.com/mousebomb/standfifty/actions/workflows/ci.yml/badge.svg)](https://github.com/mousebomb/standfifty/actions/workflows/ci.yml)
+
 每小时第 50 分钟（可配）弹全屏遮罩，强制离开键盘 60 秒的 macOS 菜单栏小工具。
 
 为替代 Apple Watch 的站立提醒而生：Apple Watch 只在手腕上震一下，盯着屏幕时经常注意不到；而 HealthTick 只能从「开始工作 / 解锁」起算倒计时，做不到「每小时固定第 50 分」。
