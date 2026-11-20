@@ -68,7 +68,8 @@ jobs:
                --password "$APPLE_APP_PASSWORD"; then
             echo "profile=ci" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::store-credentials 失败，退回凭据直传"
+            # 无头 runner 上 store-credentials 会 SIGTRAP，这是已知现象，退回凭据直传即可
+            echo "store-credentials 不可用（无头 runner 限制），改用凭据直传"
           fi
 
       - name: 构建 / 签名 / 公证 / 打包
