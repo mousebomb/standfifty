@@ -1,0 +1,83 @@
+name: Release
+
+# 打 tag（v1.0.0 这种）就自动出包：universal → 签名 → DMG → 公证 → staple → GitHub Release
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号（如 1.0.0）"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-14
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 计算版本号
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "版本：$VERSION"
+
+      # 证书以 base64 的 .p12 存 secret，导入到临时钥匙串
+      - name: 导入 Developer ID 证书
+        env:
+          CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo "$CERT_P12_BASE64" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import cert.p12 -k build.keychain -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          rm cert.p12
+          security find-identity -v -p codesigning
+
+      - name: 配置公证凭据（App Store Connect API Key）
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          echo "$ASC_PRIVATE_KEY" > AuthKey.p8
+          xcrun notarytool store-credentials ci \
+            --key AuthKey.p8 \
+            --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID"
+          rm AuthKey.p8
+
+      - name: 构建 / 签名 / 公证 / 打包
+        env:
+          NOTARY_PROFILE: ci
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: ./scripts/release.sh "${{ steps.ver.outputs.version }}"
+
+      - name: 上传到 GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          gh release create "v$VERSION" \
+            "dist/StandFifty-$VERSION.dmg" \
+            "dist/StandFifty-$VERSION.dmg.sha256" \
+            --title "StandFifty $VERSION" \
+            --generate-notes

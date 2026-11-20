@@ -22,6 +22,10 @@
 
 ## 安装
 
+**下载版**：去 [Releases](../../releases) 拿最新的 `StandFifty-x.y.z.dmg`，打开后把 app 拖进 `/Applications`。包已用 Developer ID 签名并公证，双击不会弹「无法验证开发者」。
+
+**自己编译**（本地自用，ad-hoc 签名）：
+
 ```bash
 ./build.sh                       # 跑测试 → Release 编译 → 打 .app → ad-hoc 签名
 cp -R dist/StandFifty.app /Applications/
@@ -34,6 +38,27 @@ open /Applications/StandFifty.app
 
 - 左侧倒计时：剩余分钟数、`延后 12s`、`起来！`
 - 下拉：下次提醒时刻、本小时已离开时长、今日 提醒/完成、立即测试、设置、开机自启、退出
+
+## 发布
+
+```bash
+./scripts/release.sh 1.0.0                  # 正式签名 + 公证（需要 Developer ID + 公证凭据）
+./scripts/release.sh 1.0.0 --adhoc          # 免证书，本地验证流水线
+./scripts/release.sh 1.0.0 --skip-notarize  # 只签名不公证
+```
+
+流程：单元测试 → arm64 / x86_64 分别编译 → `lipo` 成 universal → 组装 .app 并注入版本号 → `codesign --options runtime --timestamp` → DMG（含 `/Applications` 快捷方式）→ `notarytool submit --wait` → `stapler staple` → 输出 SHA256。
+
+`SIGN_IDENTITY` 自动找 `Developer ID Application`；`NOTARY_PROFILE` 是 `xcrun notarytool store-credentials` 建的 keychain profile 名。
+
+打 tag 会自动走 GitHub Actions 出包并建 Release（`.github/workflows/release.yml`），需要配置这些 secrets：
+
+| Secret | 内容 |
+|---|---|
+| `MACOS_CERT_P12` | Developer ID 证书 + 私钥导出的 .p12，base64 编码 |
+| `MACOS_CERT_PASSWORD` | p12 的导出密码 |
+| `KEYCHAIN_PASSWORD` | CI 临时钥匙串密码，随便生成 |
+| `ASC_KEY_ID` / `ASC_ISSUER_ID` / `ASC_PRIVATE_KEY` | App Store Connect API Key |
 
 ## 设置项
 
