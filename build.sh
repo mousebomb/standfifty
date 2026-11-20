@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP_NAME="StandFifty"
-BUNDLE_ID="com.mousebomb.standfifty"
+BUNDLE_ID="org.mousebomb.standfifty"
 DIST_DIR="dist"
 APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
 

@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 APP_NAME="StandFifty"
-BUNDLE_ID="com.mousebomb.standfifty"
+BUNDLE_ID="org.mousebomb.standfifty"
 MIN_MACOS="14.0"
 
 VERSION="${1:-}"
