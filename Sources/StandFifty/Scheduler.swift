@@ -113,7 +113,7 @@ final class Scheduler {
         stats.rolloverIfNeeded(now: now)
 
         guard phase == .waiting else { onChange?(); return }
-        if let until = snoozeUntil, now >= until {
+        if let until = snoozeUntil, now >= until, !away.isAway {
             snoozeUntil = nil
             fire(now: now)
             return
@@ -150,6 +150,8 @@ final class Scheduler {
 
         if let until = snoozeUntil {
             if now >= until {
+                // 延后到点时人不在（屏保/锁屏）：不弹，保留延后状态，等回来再弹
+                guard !away.isAway else { return }
                 snoozeUntil = nil
                 fire(now: now)
             }
