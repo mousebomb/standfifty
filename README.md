@@ -84,3 +84,9 @@ swift test                                                   # 22 个用例
 - 屏保 3 分钟才启动，所以「起身接杯水 40 秒」检测不到，第 50 分仍会弹，此时点「本小时已活动过」即可。
 - 跨整点的离开按重叠秒数分账：09:49→10:05 记 09 点 11 分钟、10 点 5 分钟。
 - 遮罩不抢键盘焦点（`.nonactivatingPanel`），打字不会被打断，但遮罩盖住后确实看不到内容，这是设计目的。
+
+## 图标
+
+- 原始素材：`docs/ref/matting_00179_.png`（透明底），`docs/ref/qwen_aio_00069_.png` 是不透明版本，不能用——`.icns` 需要 alpha，否则蓝色圆盘后面会露白方块。
+- 生成：`swift scripts/make-icon.swift docs/ref/matting_00179_.png build/AppIcon.iconset && iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns`
+- 脚本会自动找出实心图案的包围盒，按 macOS 规范把图案缩到画布 80%（824/1024），再输出 10 个尺寸。
