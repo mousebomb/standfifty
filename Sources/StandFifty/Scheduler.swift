@@ -71,16 +71,10 @@ final class Scheduler {
         onChange?()
     }
 
-    /// 用户确认「我已起来活动」
+    /// 用户确认「本小时我活动过」（自动凑满 60 秒也走这里）
     func complete() {
         guard phase == .ringing else { return }
-        finishRing(record: true)
-    }
-
-    /// 用户点「本小时已活动过」
-    func skip() {
-        guard phase == .ringing else { return }
-        finishRing(record: false)
+        finishRing()
     }
 
     /// 用户点「延后 1 分钟」
@@ -190,10 +184,10 @@ final class Scheduler {
         onChange?()
     }
 
-    /// 关闭遮罩后的统一收尾
-    private func finishRing(record: Bool) {
+    /// 关闭遮罩后的统一收尾：凡是关掉了遮罩，都算本小时的活动被确认
+    private func finishRing() {
         if !isManualRing {
-            if record { stats.addCompleted() } else { stats.addSkipped() }
+            stats.addCompleted()
         }
         isManualRing = false
         phase = .waiting

@@ -84,7 +84,7 @@ final class StatusBar: NSObject {
         updateTitle(now: now)
         nextItem.title = nextLine(now: now)
         awayItem.title = awayLine(now: now)
-        todayItem.title = "今日：提醒 \(scheduler.stats.reminders) · 完成 \(scheduler.stats.completed) · 跳过 \(scheduler.stats.skipped)"
+        todayItem.title = "今日：提醒 \(scheduler.stats.reminders) · 完成 \(scheduler.stats.completed)"
         launchItem.state = Self.launchAtLoginEnabled ? .on : .off
     }
 

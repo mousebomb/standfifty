@@ -27,7 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch action {
             case .completed: self.scheduler.complete()
             case .snoozed: self.scheduler.snooze()
-            case .skipped: self.scheduler.skip()
             }
         }
 

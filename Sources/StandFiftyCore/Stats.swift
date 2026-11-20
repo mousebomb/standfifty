@@ -1,11 +1,10 @@
 import Foundation
 
-/// 今日三项计数：提醒 / 完成 / 跳过。只保留当天，跨日自动清零。
+/// 今日两项计数：提醒 / 完成。只保留当天，跨日自动清零。
 public final class Stats {
 
     public private(set) var reminders = 0
     public private(set) var completed = 0
-    public private(set) var skipped = 0
 
     private let defaults: UserDefaults
     private let calendar: Calendar
@@ -20,7 +19,6 @@ public final class Stats {
 
     public func addReminder() { bump(\.reminders) }
     public func addCompleted() { bump(\.completed) }
-    public func addSkipped() { bump(\.skipped) }
 
     /// 跨日检查，返回是否发生了清零
     @discardableResult
@@ -30,7 +28,6 @@ public final class Stats {
         dayKey = key
         reminders = 0
         completed = 0
-        skipped = 0
         persist()
         return true
     }
@@ -47,11 +44,10 @@ public final class Stats {
         let dict = defaults.dictionary(forKey: dayKey) ?? [:]
         reminders = dict["reminders"] as? Int ?? 0
         completed = dict["completed"] as? Int ?? 0
-        skipped = dict["skipped"] as? Int ?? 0
     }
 
     private func persist() {
-        defaults.set(["reminders": reminders, "completed": completed, "skipped": skipped], forKey: dayKey)
+        defaults.set(["reminders": reminders, "completed": completed], forKey: dayKey)
     }
 
     private static func key(for date: Date, calendar: Calendar) -> String {

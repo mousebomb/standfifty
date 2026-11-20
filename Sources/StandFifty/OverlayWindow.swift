@@ -8,7 +8,6 @@ final class OverlayController: NSObject {
     enum Action {
         case completed
         case snoozed
-        case skipped
     }
 
     /// 遮罩关闭时回调（自动完成也算 completed）
@@ -85,7 +84,6 @@ final class OverlayController: NSObject {
         let view = OverlayView()
         view.onComplete = { [weak self] in self?.finish(.completed) }
         view.onSnooze = { [weak self] in self?.finish(.snoozed) }
-        view.onSkip = { [weak self] in self?.finish(.skipped) }
         view.configure(restSeconds: restSeconds, anchorMinute: anchorMinute)
 
         window.contentView = view
@@ -172,7 +170,6 @@ final class OverlayView: NSView {
 
     var onComplete: (() -> Void)?
     var onSnooze: (() -> Void)?
-    var onSkip: (() -> Void)?
 
     private let titleLabel = OverlayView.makeLabel(
         text: "该起来活动了",
@@ -191,9 +188,8 @@ final class OverlayView: NSView {
     )
     private let progressBar = OverlayProgressBar()
 
-    private lazy var completeButton = OverlayView.makeButton(title: "我已起来活动") { [weak self] in self?.onComplete?() }
+    private lazy var completeButton = OverlayView.makeButton(title: "本小时我活动过") { [weak self] in self?.onComplete?() }
     private lazy var snoozeButton = OverlayView.makeButton(title: "1 分钟后再提醒") { [weak self] in self?.onSnooze?() }
-    private lazy var skipButton = OverlayView.makeButton(title: "本小时已活动过") { [weak self] in self?.onSkip?() }
 
     private var restSeconds: TimeInterval = 60
     private var anchorMinute = 50
@@ -210,7 +206,6 @@ final class OverlayView: NSView {
         addSubview(hintLabel)
         addSubview(completeButton)
         addSubview(snoozeButton)
-        addSubview(skipButton)
     }
 
     required init?(coder: NSCoder) { fatalError("不支持 nib 初始化") }
@@ -252,13 +247,14 @@ final class OverlayView: NSView {
         hintLabel.frame = NSRect(x: x, y: y, width: contentWidth, height: 20)
 
         // 按钮行居中对齐
-        let buttonWidth: CGFloat = 190
+        let buttons = [completeButton, snoozeButton]
+        let buttonWidth: CGFloat = 210
         let buttonHeight: CGFloat = 48
-        let gap: CGFloat = 16
-        let totalWidth = buttonWidth * 3 + gap * 2
+        let gap: CGFloat = 18
+        let totalWidth = buttonWidth * CGFloat(buttons.count) + gap * CGFloat(buttons.count - 1)
         var buttonX = bounds.midX - totalWidth / 2
         let buttonY = bounds.midY - 130
-        for button in [completeButton, snoozeButton, skipButton] {
+        for button in buttons {
             button.frame = NSRect(x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight)
             buttonX += buttonWidth + gap
         }
