@@ -73,6 +73,7 @@ Sources/StandFifty/          AppKit 外壳
 swift test                                                   # 22 个用例
 ./.build/debug/StandFifty --ring-now                          # 启动即弹遮罩
 ./.build/debug/StandFifty --dump-overlay /tmp/overlay.png     # 离屏渲染遮罩（不弹窗）
+./.build/debug/StandFifty --status                            # 打印当前排期与离开统计
 ```
 
 `--dump-overlay` 用于没有「屏幕录制」权限时检查版式——屏保级窗口本来也不会被 `screencapture` 捕获。

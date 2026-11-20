@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let overlay = OverlayController()
     private let settingsWindow = SettingsWindowController()
+    /// 抑制 App Nap，保证后台定时器准点触发（不影响系统休眠）
+    private var activity: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         config = AppConfig.load()
@@ -49,6 +51,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observeSystemEvents()
         scheduler.start()
 
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep],
+            reason: "站立提醒需要准点触发"
+        )
+
         // 调试用：`StandFifty --ring-now` 启动即弹遮罩，方便验证 UI
         if CommandLine.arguments.contains("--ring-now") {
             scheduler.ringNow()
@@ -57,6 +64,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         scheduler?.stop()
+        if let activity {
+            ProcessInfo.processInfo.endActivity(activity)
+        }
     }
 
     // MARK: - 设置
