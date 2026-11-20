@@ -132,3 +132,7 @@ iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
 - 抠完还要把 alpha=0 区域的白色 RGB 清零（`matte-icon.swift` 最后一步重合成到预乘透明画布），否则某些绘制路径会把透明区渲染成白块。
 
 历史素材留在 `docs/ref/`：`matting_00179_.png`（旧的上箭头版）、`qwen_aio_00069_.png`（不透明版，不可用）、`icon-concepts-2026-11-20.png`（四版草图对比）。
+
+## License
+
+MIT
