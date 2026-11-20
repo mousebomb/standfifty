@@ -2,7 +2,7 @@ import Foundation
 import StandFiftyCore
 
 /// 提醒节奏状态机：只有「等待」和「正在提醒」两态。
-/// 核心约束：无论用户怎么点（延后 / 跳过 / 完成），下一次提醒永远落在下一小时的锚点上，绝不漂移。
+/// 核心约束：无论用户怎么点（延后 / 活动过），下一次提醒永远落在下一小时的锚点上，绝不漂移。
 final class Scheduler {
 
     enum Phase {
